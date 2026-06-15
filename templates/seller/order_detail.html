@@ -1,0 +1,71 @@
+{% extends "seller/base.html" %}
+
+{% block title %}Order #{{ order.order_number }}{% endblock %}
+{% block page_title %}Order Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white"><i class="bi bi-info-circle"></i> Order Information</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"><strong>Order Number</strong><br>{{ order.order_number }}</div>
+                    <div class="col-md-6"><strong>Status</strong><br><span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">{{ order.status }}</span></div>
+                    <div class="col-md-6 mt-3"><strong>Total Amount</strong><br>₹{{ "%.2f"|format(order.total_amount) }}</div>
+                    <div class="col-md-6 mt-3"><strong>Your Earnings</strong><br>₹{{ "%.2f"|format(order.seller_earnings) }}</div>
+                    <div class="col-md-6 mt-3"><strong>Customer Address</strong><br>{{ order.shipping_address }}</div>
+                    <div class="col-md-6 mt-3"><strong>Tracking Number</strong><br>{{ order.tracking_number or 'Not assigned' }}</div>
+                    <div class="col-md-12 mt-3"><strong>Order Date</strong><br>{{ order.created_at.strftime('%d %B %Y, %I:%M %p') }}</div>
+                    {% if order.delivered_at %}<div class="col-md-12 mt-3"><strong>Delivered On</strong><br>{{ order.delivered_at.strftime('%d %B %Y') }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-cart"></i> Items</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light"><tr><th>Product</th><th>Quantity</th><th>Price</th><th>Total</th></tr></thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>₹{{ "%.2f"|format(item.price) }}</td>
+                                <td>₹{{ "%.2f"|format(item.total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-truck"></i> Update Status</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('seller.update_order_status', order_id=order.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">Order Status</label>
+                        <select name="status" class="form-select">
+                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                        </select>
+                        <small class="text-muted">Only forward status changes allowed.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tracking Number (optional)</label>
+                        <input type="text" name="tracking_number" class="form-control" value="{{ order.tracking_number or '' }}" placeholder="e.g., Courier tracking ID">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save"></i> Update Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Product Management{% endblock %}
+{% block page_title %}Product Moderation{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Products</li>
+{% endblock %}
+
+{% block content %}
+<!-- Status Filter Tabs -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if status_filter == 'all' %}active{% endif %}" href="{{ url_for('admin.admin_products', status='all') }}">
+            <i class="fas fa-list"></i> All
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status_filter == 'pending' %}active{% endif %}" href="{{ url_for('admin.admin_products', status='pending') }}">
+            <i class="fas fa-clock"></i> Pending
+            <span class="badge bg-warning ms-1">{{ products.items|selectattr('status', 'equalto', 'pending')|list|length if products else 0 }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status_filter == 'approved' %}active{% endif %}" href="{{ url_for('admin.admin_products', status='approved') }}">
+            <i class="fas fa-check-circle"></i> Approved
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status_filter == 'rejected' %}active{% endif %}" href="{{ url_for('admin.admin_products', status='rejected') }}">
+            <i class="fas fa-times-circle"></i> Rejected
+        </a>
+    </li>
+</ul>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <h6 class="mb-0"><i class="fas fa-box"></i> Products List</h6>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search products...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="productsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Seller</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products.items %}
+                    <tr data-product-id="{{ product.id }}">
+                        <td>{{ product.id }}</td>
+                        <td>
+                            <img src="{{ url_for('static', filename='uploads/products/' + product.primary_image) }}" 
+                                 width="50" height="50" style="object-fit: cover; border-radius: 8px;" 
+                                 onerror="this.src='https://placehold.co/50x50?text=No+Image'">
+                        </td>
+                        <td><strong>{{ product.name[:50] }}</strong></td>
+                        <td>{{ product.seller.store_name }}</td>
+                        <td>{{ product.category.name }}</td>
+                        <td class="text-success fw-bold">₹{{ "{:,.2f}".format(product.price) }}</td>
+                        <td>
+                            {% if product.stock < 5 %}
+                                <span class="badge bg-danger">{{ product.stock }}</span>
+                            {% elif product.stock < 20 %}
+                                <span class="badge bg-warning">{{ product.stock }}</span>
+                            {% else %}
+                                {{ product.stock }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <i class="fas fa-star text-warning"></i> {{ product.rating or 0 }}
+                            <small class="text-muted">({{ product.total_reviews }})</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if product.status == 'approved' %}success{% elif product.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                {{ product.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ product.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if product.status == 'pending' %}
+                            <button class="btn btn-sm btn-success btn-approve-product" data-id="{{ product.id }}">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-reject-product" data-id="{{ product.id }}">
+                                <i class="fas fa-times-circle"></i> Reject
+                            </button>
+                            {% endif %}
+                            
+                            {% if product.status == 'approved' %}
+                            <button class="btn btn-sm btn-warning btn-reject-product" data-id="{{ product.id }}">
+                                <i class="fas fa-ban"></i> Reject
+                            </button>
+                            {% endif %}
+                            
+                            <button class="btn btn-sm btn-danger btn-remove-product" data-id="{{ product.id }}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="11" class="text-center py-5">No products found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if products.pages > 1 %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if products.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.admin_products', page=products.prev_num, status=status_filter) }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page in range(1, products.pages + 1) %}
+                <li class="page-item {% if page == products.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.admin_products', page=page, status=status_filter) }}">{{ page }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if products.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.admin_products', page=products.next_num, status=status_filter) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Approve Product
+    document.querySelectorAll('.btn-approve-product').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const productId = this.getAttribute('data-id');
+            if (confirm('Approve this product? It will be visible to customers.')) {
+                await adminAction(`{{ url_for('admin.approve_product', product_id=0) }}`.replace('/0', `/${productId}`));
+            }
+        });
+    });
+    
+    // Reject Product
+    document.querySelectorAll('.btn-reject-product').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const productId = this.getAttribute('data-id');
+            if (confirm('Reject this product?')) {
+                await adminAction(`{{ url_for('admin.reject_product', product_id=0) }}`.replace('/0', `/${productId}`));
+            }
+        });
+    });
+    
+    // Remove Product
+    document.querySelectorAll('.btn-remove-product').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const productId = this.getAttribute('data-id');
+            if (confirm('⚠️ Remove this product permanently?')) {
+                await adminAction(`{{ url_for('admin.remove_product', product_id=0) }}`.replace('/0', `/${productId}`));
+            }
+        });
+    });
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#productsTable tbody tr');
+            rows.forEach(row => {
+                if (row.cells && row.cells[2]) {
+                    const text = row.cells[2].innerText.toLowerCase();
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}

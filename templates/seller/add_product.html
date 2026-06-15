@@ -1,0 +1,67 @@
+{% extends "seller/base.html" %}
+
+{% block title %}Add Product{% endblock %}
+{% block page_title %}Add New Product{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-plus-circle"></i> Product Information</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <textarea name="description" class="form-control" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="">Select category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Price (₹) *</label>
+                            <input type="number" step="0.01" name="price" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Stock Quantity *</label>
+                            <input type="number" name="stock" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Product Image</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <small class="text-muted">Upload a clear product image (jpg, png).</small>
+                        <div class="mt-2" id="imagePreview"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Submit for Approval</button>
+                    <a href="{{ url_for('seller.products') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('input[name="image"]').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        if (e.target.files && e.target.files[0]) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(e.target.files[0]);
+            img.style.maxWidth = '200px';
+            img.style.borderRadius = '8px';
+            preview.appendChild(img);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "seller/base.html" %}
+
+{% block title %}My Wallet{% endblock %}
+{% block page_title %}Wallet & Transactions{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white border-0 shadow-sm">
+            <div class="card-body"><h5 class="card-title">Available Balance</h5><h2>₹{{ "%.2f"|format(wallet.available_balance) }}</h2></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark border-0 shadow-sm">
+            <div class="card-body"><h5 class="card-title">Pending Balance</h5><h2>₹{{ "%.2f"|format(wallet.pending_balance) }}</h2></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white border-0 shadow-sm">
+            <div class="card-body"><h5 class="card-title">Total Withdrawn</h5><h2>₹{{ "%.2f"|format(wallet.total_withdrawn) }}</h2></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-cash-stack"></i> Withdrawal Request</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('seller.request_withdrawal') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" max="{{ wallet.available_balance }}" required>
+                        <small>Max: ₹{{ "%.2f"|format(wallet.available_balance) }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="upi">UPI</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Details</label>
+                        <textarea name="account_details" class="form-control" rows="2" placeholder="Bank account number / UPI ID" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" onclick="return confirm('Request withdrawal?')">Request Withdrawal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-list-ul"></i> Transaction History</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
+                        <tbody>
+                            {% for txn in transactions %}
+                            <tr>
+                                <td>{{ txn.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ txn.description }}</td>
+                                <td><span class="badge bg-{% if txn.type == 'credit' %}success{% else %}danger{% endif %}">{{ txn.type }}</span></td>
+                                <td class="{% if txn.type == 'credit' %}text-success{% else %}text-danger{% endif %}">₹{{ "%.2f"|format(txn.amount) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center">No transactions yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white"><i class="bi bi-clock-history"></i> Withdrawal History</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-light"><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Remarks</th></tr></thead>
+                <tbody>
+                    {% for w in withdrawals %}
+                    <tr>
+                        <td>{{ w.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>₹{{ "%.2f"|format(w.amount) }}</td>
+                        <td>{{ w.payment_method }}</td>
+                        <td><span class="badge bg-{% if w.status == 'approved' %}success{% elif w.status == 'rejected' %}danger{% else %}warning{% endif %}">{{ w.status }}</span></td>
+                        <td>{{ w.remarks or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center">No withdrawal requests yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

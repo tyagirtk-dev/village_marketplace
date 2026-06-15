@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Wishlist{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>My Wishlist</h2>
+    <div class="row">{% for item in wishlist_items %}<div class="col-md-3 mb-3"><div class="card h-100"><img src="{{ url_for('static', filename='uploads/products/' + (item.product.images.split(',')[0] if item.product.images else 'default.jpg')) }}" class="card-img-top"><div class="card-body"><h6>{{ item.product.name }}</h6><p>₹{{ item.product.price }}</p><a href="{{ url_for('customer.add_to_cart', product_id=item.product.id) }}" class="btn btn-sm btn-primary">Add to Cart</a><a href="{{ url_for('customer.remove_from_wishlist', product_id=item.product.id) }}" class="btn btn-sm btn-danger ms-2">Remove</a></div></div></div>{% else %}<div class="col-12 alert alert-info">No items.</div>{% endfor %}</div>
+</div>
+{% endblock %}

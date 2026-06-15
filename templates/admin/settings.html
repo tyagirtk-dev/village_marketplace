@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Site Settings{% endblock %}
+{% block page_title %}Configuration Settings{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Settings</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-sliders-h"></i> General Settings</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.settings') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Commission Rate (%)</label>
+                        <input type="number" step="0.01" name="commission_rate" class="form-control" value="{{ commission_rate }}" required>
+                        <small class="text-muted">Percentage deducted from each sale as platform commission</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="maintenance_mode" id="maintenanceMode" {% if maintenance_mode %}checked{% endif %}>
+                            <label class="form-check-label" for="maintenanceMode">Maintenance Mode</label>
+                        </div>
+                        <small class="text-muted">When enabled, only admins can access the site</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="seller_auto_approve" id="sellerAutoApprove" {% if seller_auto_approve %}checked{% endif %}>
+                            <label class="form-check-label" for="sellerAutoApprove">Auto-Approve Sellers</label>
+                        </div>
+                        <small class="text-muted">Automatically approve new seller registrations</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> System Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Platform Version:</strong></td>
+                        <td>2.0.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database:</strong></td>
+                        <td>SQLite / PostgreSQL Ready</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Admin:</strong></td>
+                        <td>{{ current_user.name }} ({{ current_user.email }})</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Server Time:</strong></td>
+                        <td>{{ datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') if datetime else 'UTC' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add datetime context processor in your Flask app
+    // from datetime import datetime
+    // app.context_processor(lambda: {'datetime': datetime})
+</script>
+{% endblock %}

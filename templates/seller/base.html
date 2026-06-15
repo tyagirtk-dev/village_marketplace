@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}Seller Panel - {{ config.SITE_NAME }}{% endblock %}</title>
+    <!-- Bootstrap 5 + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Global */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            background: #f4f6f9;
+            overflow-x: hidden;
+        }
+        /* Seller Wrapper */
+        .seller-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar */
+        .seller-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+        .sidebar-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-header h3 i { color: #3b82f6; }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav li a i { width: 20px; font-size: 1.1rem; }
+        .sidebar-nav li a:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border-left-color: #3b82f6;
+            padding-left: 28px;
+        }
+        .sidebar-nav li a.active {
+            background: rgba(59,130,246,0.15);
+            color: white;
+            border-left-color: #3b82f6;
+            font-weight: 500;
+        }
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        /* Main content */
+        .seller-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin 0.3s;
+            min-height: 100vh;
+        }
+        /* Top navbar */
+        .seller-topbar {
+            background: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .page-title { font-size: 1.5rem; font-weight: 600; margin: 0; }
+        .seller-user {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .dark-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .dark-toggle:hover { background: #f1f5f9; }
+        /* Toast */
+        .toast-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 280px;
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .seller-sidebar { left: -260px; }
+            .seller-sidebar.active { left: 0; }
+            .seller-content { margin-left: 0; }
+            .sidebar-toggle { display: block; }
+            .page-title { font-size: 1.25rem; }
+        }
+        /* Dark mode */
+        [data-bs-theme="dark"] body { background: #0f172a; }
+        [data-bs-theme="dark"] .seller-topbar { background: #1e293b; color: white; }
+        [data-bs-theme="dark"] .card { background: #1e293b; color: #e2e8f0; }
+        [data-bs-theme="dark"] .table { color: #e2e8f0; }
+        [data-bs-theme="dark"] .dark-toggle:hover { background: #334155; }
+        /* Scrollbar */
+        .seller-sidebar::-webkit-scrollbar { width: 5px; }
+        .seller-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .seller-sidebar::-webkit-scrollbar-thumb { background: #475569; border-radius: 5px; }
+        /* Card hover */
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        [data-bs-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
+        /* product image */
+        .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        .badge-pending { background: #f59e0b; }
+        .badge-approved { background: #10b981; }
+        .badge-rejected { background: #ef4444; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="seller-wrapper">
+        <!-- Sidebar -->
+        <div class="seller-sidebar" id="sellerSidebar">
+            <div class="sidebar-header">
+                <h3><i class="bi bi-shop"></i> VillageSeller</h3>
+                <small class="d-block mt-1 opacity-75">Seller Dashboard</small>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="{{ url_for('seller.dashboard') }}" class="{% if request.endpoint == 'seller.dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('seller.products') }}" class="{% if request.endpoint == 'seller.products' %}active{% endif %}"><i class="bi bi-box-seam"></i> Products</a></li>
+                <li><a href="{{ url_for('seller.orders') }}" class="{% if request.endpoint == 'seller.orders' %}active{% endif %}"><i class="bi bi-cart-check"></i> Orders</a></li>
+                <li><a href="{{ url_for('seller.wallet') }}" class="{% if request.endpoint == 'seller.wallet' %}active{% endif %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
+                <li><a href="{{ url_for('seller.reviews') }}" class="{% if request.endpoint == 'seller.reviews' %}active{% endif %}"><i class="bi bi-star"></i> Reviews</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <i class="bi bi-box-arrow-right"></i>
+                <a href="{{ url_for('auth.logout') }}" class="text-white-50 text-decoration-none ms-2">Logout</a>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="seller-content">
+            <div class="seller-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+                    <h4 class="page-title mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                </div>
+                <div class="seller-user">
+                    <div class="notification-bell"><i class="bi bi-bell fs-5"></i></div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle fs-5"></i> {{ current_user.name }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                    <button class="dark-toggle" id="darkModeToggle"><i class="bi bi-moon-stars"></i></button>
+                </div>
+            </div>
+
+            <div class="container-fluid px-4 py-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-notification" id="toastContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar toggle
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sellerSidebar');
+        if(toggleBtn) toggleBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
+
+        // Dark mode
+        const darkToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+        const saved = localStorage.getItem('theme');
+        if(saved) html.setAttribute('data-bs-theme', saved);
+        if(darkToggle) darkToggle.addEventListener('click', () => {
+            const newTheme = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            const icon = darkToggle.querySelector('i');
+            icon.className = newTheme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+        });
+
+        function showToast(msg, type='success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show shadow`;
+            toast.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+        window.showToast = showToast;
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

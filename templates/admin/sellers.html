@@ -1,0 +1,196 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Seller Management{% endblock %}
+{% block page_title %}Seller Management{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Sellers</li>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <h6 class="mb-0"><i class="fas fa-store"></i> All Sellers</h6>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search sellers...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="sellersTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Store Name</th>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Status</th>
+                        <th>Total Sales</th>
+                        <th>Revenue</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seller in sellers.items %}
+                    <tr data-seller-id="{{ seller.id }}">
+                        <td>{{ seller.id }}</td>
+                        <td><strong>{{ seller.store_name }}</strong></td>
+                        <td>{{ seller.user.name }}</td>
+                        <td>{{ seller.user.email }}</td>
+                        <td>{{ seller.user.mobile }}</td>
+                        <td>
+                            {% if seller.user.is_suspended %}
+                                <span class="badge bg-danger">Suspended</span>
+                            {% elif seller.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ seller.total_sales }}</td>
+                        <td>₹{{ "{:,.2f}".format(seller.total_revenue) }}</td>
+                        <td>{{ seller.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info btn-view-seller" data-id="{{ seller.id }}" data-bs-toggle="modal" data-bs-target="#sellerModal">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            
+                            {% if not seller.is_approved %}
+                            <button class="btn btn-sm btn-success btn-approve-seller" data-id="{{ seller.id }}">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </button>
+                            {% endif %}
+                            
+                            {% if not seller.user.is_suspended %}
+                            <button class="btn btn-sm btn-warning btn-suspend-seller" data-id="{{ seller.id }}">
+                                <i class="fas fa-ban"></i> Suspend
+                            </button>
+                            {% endif %}
+                            
+                            <button class="btn btn-sm btn-danger btn-delete-seller" data-id="{{ seller.id }}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="10" class="text-center py-5">No sellers found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if sellers.pages > 1 %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if sellers.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.sellers', page=sellers.prev_num) }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page in range(1, sellers.pages + 1) %}
+                <li class="page-item {% if page == sellers.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.sellers', page=page) }}">{{ page }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if sellers.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.sellers', page=sellers.next_num) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Seller Details Modal -->
+<div class="modal fade" id="sellerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seller Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="sellerModalBody">
+                <!-- Dynamic content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Approve Seller
+    document.querySelectorAll('.btn-approve-seller').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const sellerId = this.getAttribute('data-id');
+            if (confirm('Approve this seller? They will be able to sell products.')) {
+                await adminAction(`{{ url_for('admin.approve_seller', seller_id=0) }}`.replace('/0', `/${sellerId}`));
+            }
+        });
+    });
+    
+    // Suspend Seller
+    document.querySelectorAll('.btn-suspend-seller').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const sellerId = this.getAttribute('data-id');
+            if (confirm('Suspend this seller? Their products will be hidden.')) {
+                await adminAction(`{{ url_for('admin.suspend_seller', seller_id=0) }}`.replace('/0', `/${sellerId}`));
+            }
+        });
+    });
+    
+    // Delete Seller
+    document.querySelectorAll('.btn-delete-seller').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const sellerId = this.getAttribute('data-id');
+            if (confirm('⚠️ WARNING: This will permanently delete the seller and all their data. Continue?')) {
+                await adminAction(`{{ url_for('admin.delete_seller', seller_id=0) }}`.replace('/0', `/${sellerId}`));
+            }
+        });
+    });
+    
+    // View Seller Details
+    document.querySelectorAll('.btn-view-seller').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sellerId = this.getAttribute('data-id');
+            // In a real implementation, you would fetch seller details via AJAX
+            document.getElementById('sellerModalBody').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Loading seller details...</p>
+                </div>
+            `;
+            // Here you would make an AJAX call to get seller details
+        });
+    });
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#sellersTable tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+</script>
+{% endblock %}

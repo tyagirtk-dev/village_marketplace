@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Register - {{ config.SITE_NAME }}{% endblock %}
+
+{% block content %}
+
+<div class="container py-4"><div class="row justify-content-center">
+
+    <div class="col-12 col-md-8 col-lg-6">
+
+        <div class="card border-0 shadow-lg rounded-4">
+
+            <div class="card-body p-4">
+
+                <div class="text-center mb-4">
+
+                    <i class="bi bi-person-plus-fill text-primary"
+                       style="font-size:3rem;"></i>
+
+                    <h3 class="fw-bold mt-2 mb-1">
+                        Create Account
+                    </h3>
+
+                    <p class="text-muted small mb-0">
+                        Join {{ config.SITE_NAME }} today
+                    </p>
+
+                </div>
+
+                <form method="POST">
+
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold small">
+                            Full Name
+                        </label>
+
+                        {{ form.name(
+                            class="form-control",
+                            placeholder="Enter your full name"
+                        ) }}
+
+                        {% for error in form.name.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold small">
+                            Email Address
+                        </label>
+
+                        {{ form.email(
+                            class="form-control",
+                            placeholder="Enter email address"
+                        ) }}
+
+                        {% for error in form.email.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold small">
+                            Mobile Number
+                        </label>
+
+                        {{ form.mobile(
+                            class="form-control",
+                            placeholder="Enter mobile number"
+                        ) }}
+
+                        {% for error in form.mobile.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold small">
+                            Password
+                        </label>
+
+                        {{ form.password(
+                            class="form-control",
+                            placeholder="Create password"
+                        ) }}
+
+                        {% for error in form.password.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold small">
+                            Confirm Password
+                        </label>
+
+                        {{ form.confirm_password(
+                            class="form-control",
+                            placeholder="Confirm password"
+                        ) }}
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold small">
+                            Account Type
+                        </label>
+
+                        {{ form.role(class="form-select") }}
+
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+
+                        <i class="bi bi-check-circle me-2"></i>
+                        Create Account
+
+                    </button>
+
+                </form>
+
+                <hr>
+
+                <div class="text-center small">
+
+                    Already have an account?
+
+                    <a href="{{ url_for('auth.login') }}"
+                       class="text-decoration-none fw-semibold">
+
+                        Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+{% endblock %}

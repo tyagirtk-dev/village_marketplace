@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} | {{ config.SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row g-4">
+        <!-- Product Gallery -->
+        <div class="col-md-6">
+            <div class="product-gallery">
+                {% set images = product.images.split(',') if product.images else [] %}
+                <div class="main-image">
+                    <img id="mainProductImage" src="{{ url_for('static', filename='uploads/products/' + (images[0] if images else 'default.jpg')) }}" class="img-fluid rounded-3 shadow-sm" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
+                </div>
+                {% if images|length > 1 %}
+                <div class="thumbnail-list d-flex gap-2 mt-3 overflow-auto">
+                    {% for img in images %}
+                    <img src="{{ url_for('static', filename='uploads/products/' + img) }}" class="thumbnail-img" width="70" height="70" style="object-fit:cover; cursor:pointer; border-radius:8px" onclick="document.getElementById('mainProductImage').src=this.src">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <h1 class="h2">{{ product.name }}</h1>
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="rating-stars">
+                    {% for i in range(1,6) %}
+                        {% if i <= product.rating|round(0,'floor') %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                        {% elif product.rating % 1 >= 0.5 and i == product.rating|round(0,'ceil') %}
+                            <i class="bi bi-star-half text-warning"></i>
+                        {% else %}
+                            <i class="bi bi-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="text-muted">{{ product.total_reviews }} reviews</span>
+            </div>
+            <div class="mb-2">
+                <span class="text-muted">Seller: </span><strong>{{ product.seller.store_name }}</strong>
+            </div>
+            <div class="mb-3">
+                <span class="h2 text-primary">₹{{ "%.2f"|format(product.price) }}</span>
+            </div>
+            <div class="mb-3">
+                {% if product.stock > 0 %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> In Stock</span>
+                    {% if product.stock < 10 %}
+                        <span class="badge bg-warning ms-2">Only {{ product.stock }} left</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Out of Stock</span>
+                {% endif %}
+            </div>
+            <p class="mb-4">{{ product.description }}</p>
+
+            {% if product.stock > 0 %}
+            <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}" method="POST" class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control" style="width:100px">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-cart-plus"></i> Add to Cart</button>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('customer.add_to_wishlist', product_id=product.id) }}" class="btn btn-outline-danger btn-lg"><i class="bi bi-heart"></i> Wishlist</a>
+                </div>
+            </form>
+            {% else %}
+            <button class="btn btn-secondary btn-lg" disabled>Out of Stock</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Description & Reviews Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">Description</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">Reviews ({{ product.total_reviews }})</button></li>
+            </ul>
+            <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                <div class="tab-pane fade show active" id="description">
+                    {{ product.description }}
+                </div>
+                <div class="tab-pane fade" id="reviews">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ review.customer.user.name }}</strong>
+                                <div class="rating-stars">
+                                    {% for i in range(1,6) %}
+                                        <i class="bi bi-star-fill text-warning" {% if i > review.rating %}style="opacity:0.3"{% endif %}></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p>{{ review.comment }}</p>
+                            <small class="text-muted">{{ review.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No reviews yet. Be the first to review!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h5>You may also like</h5>
+            <div class="row g-4 mt-2">
+                {% for rp in related_products[:4] %}
+                <div class="col-6 col-md-3">
+                    {% include "components/product_card.html" with product=rp %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mobile Sticky Buy Bar -->
+{% if product.stock > 0 %}
+<div class="mobile-sticky-bar d-md-none">
+    <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-lg">
+        <div><strong>₹{{ "%.2f"|format(product.price) }}</strong><br><small class="text-success">In Stock</small></div>
+        <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}" method="POST" class="d-flex gap-2">
+            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="width:70px" class="form-control form-control-sm">
+            <button type="submit" class="btn btn-primary btn-sm">Buy Now</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,85 @@
+:root {
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+/* Product Cards */
+.product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.product-img {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Cart Badge */
+.cart-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    border-radius: 16px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.dashboard-card:hover {
+    transform: scale(1.02);
+}
+
+/* Star Rating */
+.star-rating {
+    color: #ffc107;
+}
+
+/* Dark Mode Overrides */
+[data-bs-theme="dark"] .product-card {
+    background-color: #2b2b2b;
+}
+
+[data-bs-theme="dark"] .dashboard-card {
+    background-color: #2c2c2c;
+}
+
+/* Responsive Tables */
+@media (max-width: 768px) {
+    .table-responsive-stack {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+}
+
+/* Loading Spinner */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}

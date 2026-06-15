@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+    <div class="row">
+
+        <!-- LEFT FILTER -->
+        <div class="col-md-3">
+
+            <div class="card mb-3">
+                <div class="card-header">Categories</div>
+
+                <div class="list-group list-group-flush">
+
+                    <a href="{{ url_for('main.products') }}"
+                       class="list-group-item list-group-item-action {% if not category_id %}active{% endif %}">
+                        All
+                    </a>
+
+                    {% for cat in categories %}
+                    <a href="{{ url_for('main.products', category=cat.id, search=search_query) }}"
+                       class="list-group-item list-group-item-action {% if category_id and category_id|string == cat.id|string %}active{% endif %}">
+                        {{ cat.name }}
+                    </a>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Price Range</div>
+
+                <div class="card-body">
+                    <form method="GET">
+
+                        <input type="hidden" name="category" value="{{ category_id or '' }}">
+                        <input type="hidden" name="search" value="{{ search_query or '' }}">
+
+                        <input type="number" name="min_price"
+                               class="form-control mb-2"
+                               placeholder="Min"
+                               value="{{ request.args.get('min_price', '') }}">
+
+                        <input type="number" name="max_price"
+                               class="form-control mb-2"
+                               placeholder="Max"
+                               value="{{ request.args.get('max_price', '') }}">
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Filter
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PRODUCTS -->
+        <div class="col-md-9">
+
+            <div class="row g-4">
+
+                {% for product in products %}
+
+                <div class="col-md-4">
+
+                    <div class="card h-100 shadow-sm">
+
+                        <img src="{{ url_for('static', filename='uploads/products/' + (product.images.split(',')[0] if product.images else 'default.jpg')) }}"
+                             class="card-img-top"
+                             style="height:180px; object-fit:cover;">
+
+                        <div class="card-body">
+
+                            <h6>{{ product.name[:35] }}</h6>
+
+                            <p class="mb-2">₹{{ product.price }}</p>
+
+                            <a href="{{ url_for('main.product_detail', product_id=product.id) }}"
+                               class="btn btn-sm btn-primary">
+                                Details
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% else %}
+
+                <div class="col-12 text-center text-muted">
+                    No products found
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            <!-- PAGINATION -->
+            {% if pagination and pagination.pages > 1 %}
+
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('main.products', page=pagination.prev_num, category=category_id, search=search_query) }}">
+                            Prev
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for p in range(1, pagination.pages + 1) %}
+
+                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                        <a class="page-link"
+                           href="{{ url_for('main.products', page=p, category=category_id, search=search_query) }}">
+                            {{ p }}
+                        </a>
+                    </li>
+
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('main.products', page=pagination.next_num, category=category_id, search=search_query) }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

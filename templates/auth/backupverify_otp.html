@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Verify OTP{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow text-center">
+                <div class="card-body p-5">
+                    <i class="bi bi-envelope-paper fs-1 text-primary"></i>
+                    <h4 class="mt-3">Email Verification</h4>
+                    <p>Enter the 6-digit OTP sent to your email.</p>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.otp(class="form-control text-center fs-3", placeholder="000000") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Verify</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}y
+

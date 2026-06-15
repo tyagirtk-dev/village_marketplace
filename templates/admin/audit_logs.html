@@ -1,0 +1,106 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+{% block page_title %}System Audit Logs{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Audit Logs</li>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <h6 class="mb-0"><i class="fas fa-history"></i> Activity Logs</h6>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search logs...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="auditTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Target</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                        <th>User Agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>{{ log.user.name if log.user else 'System' }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ log.action }}</span>
+                        </td>
+                        <td>{{ log.target_type }} #{{ log.target_id }} if log.target_id else '-' </td>
+                        <td><small>{{ log.details or '-' }}</small></td>
+                        <td>{{ log.ip_address or '-' }}</td>
+                        <td><small>{{ log.user_agent[:30] if log.user_agent else '-' }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center py-5">No audit logs found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if logs.pages > 1 %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if logs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.prev_num) }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page in range(1, logs.pages + 1) %}
+                <li class="page-item {% if page == logs.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=page) }}">{{ page }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if logs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.next_num) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#auditTable tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+</script>
+{% endblock %}
