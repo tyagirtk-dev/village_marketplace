@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for
-from flask import Blueprint, render_template, request, jsonify, current_app
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask_login import current_user
 from models.db import db
 from models.product import Product, Category
+from models.review import Review
 from models.user import Seller
 from sqlalchemy import or_
 import math
@@ -90,8 +90,10 @@ def product_detail(product_id):
 
 
 @main_bp.route('/dashboard-redirect')
-@login_required
 def dashboard_redirect():
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+    
     if current_user.role == 'admin':
         return redirect(url_for('admin.dashboard'))
     elif current_user.role == 'seller':
