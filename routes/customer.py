@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, session
 from flask_login import login_required, current_user
 from models.db import db
 from models.user import Customer
@@ -277,6 +277,7 @@ def cancel_order(order_id):
     for item in order.items:
         item.product.stock += item.quantity
 
+    db.session.commit()
     flash('Order cancelled successfully.', 'success')
     return redirect(url_for('customer.orders'))
 
