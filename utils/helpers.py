@@ -21,7 +21,7 @@ def allowed_file(filename):
 # ----------------------------
 # AUDIT LOG
 # ----------------------------
-def log_audit(user_id, action, details=None):
+def log_audit(user_id, action, details=None, *args):
     try:
         audit = AuditLog(
             user_id=user_id,
@@ -75,3 +75,35 @@ def log_info(message):
 
 def log_error(message):
     current_app.logger.error(message)
+
+def save_uploaded_file(file, folder='uploads'):
+    if not file or file.filename == '':
+        return None
+
+    from werkzeug.utils import secure_filename
+
+    filename = secure_filename(file.filename)
+
+    upload_folder = os.path.join(
+        current_app.root_path,
+        'uploads',
+        folder
+    )
+
+    os.makedirs(upload_folder, exist_ok=True)
+
+    filepath = os.path.join(upload_folder, filename)
+    file.save(filepath)
+
+    return f"{folder}/{filename}"
+
+
+def setup_logging():
+    import logging
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(message)s'
+    )
+
+    return logging.getLogger(__name__)

@@ -1,5 +1,7 @@
 from flask import current_app
-from models.db import db, Wallet, Transaction, Withdrawal, Order, OrderItem
+from models.db import db
+from models.payment import Wallet, Transaction, Withdrawal
+from models.order import Order, OrderItem
 from models.user import Seller
 from utils.helpers import create_notification
 
