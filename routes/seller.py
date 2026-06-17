@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
-from flask_login import login_required, current_user
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 import os
 from models.db import db
-from models.user import Seller
+from models.user import Seller, User
 from models.product import Product, Category
 from models.order import Order, OrderItem
 from models.payment import Wallet, Withdrawal, Transaction
@@ -28,27 +28,27 @@ def dashboard():
     total_products = Product.query.filter_by(seller_id=seller.id).count()
     total_orders = Order.query.filter_by(seller_id=seller.id).count()
     pending_orders = Order.query.filter_by(
-    seller_id=seller.id, status='pending').count()
+        seller_id=seller.id, status='pending').count()
     total_revenue = sum(
-    order.seller_earnings for order in Order.query.filter_by(
-        seller_id=seller.id,
-         status='delivered').all())
+        order.seller_earnings for order in Order.query.filter_by(
+            seller_id=seller.id,
+            status='delivered').all())
 
     recent_orders = Order.query.filter_by(
-    seller_id=seller.id).order_by(
-        Order.created_at.desc()).limit(5).all()
+        seller_id=seller.id).order_by(
+            Order.created_at.desc()).limit(5).all()
     low_stock_products = Product.query.filter(
-    Product.seller_id == seller.id,
-    Product.stock < 10,
-     Product.status == 'approved').all()
+        Product.seller_id == seller.id,
+        Product.stock < 10,
+        Product.status == 'approved').all()
 
     return render_template('seller/dashboard.html',
-                         total_products=total_products,
-                         total_orders=total_orders,
-                         pending_orders=pending_orders,
-                         total_revenue=total_revenue,
-                         recent_orders=recent_orders,
-                         low_stock_products=low_stock_products)
+                           total_products=total_products,
+                           total_orders=total_orders,
+                           pending_orders=pending_orders,
+                           total_revenue=total_revenue,
+                           recent_orders=recent_orders,
+                           low_stock_products=low_stock_products)
 
 # Product Management
 
@@ -58,8 +58,8 @@ def dashboard():
 def products():
     seller = current_user.seller_profile
     products = Product.query.filter_by(
-    seller_id=seller.id).order_by(
-        Product.created_at.desc()).all()
+        seller_id=seller.id).order_by(
+            Product.created_at.desc()).all()
     return render_template('seller/products.html', products=products)
 
 
@@ -84,9 +84,7 @@ def add_product():
         image_path = None
         if image_file:
             filename = save_uploaded_file(image_file, 'products')
-
-
-image_path = filename
+            image_path = filename
 
         product = Product(
             seller_id=current_user.seller_profile.id,
@@ -103,14 +101,14 @@ image_path = filename
         db.session.commit()
 
         log_audit(
-    current_user.id,
-    'product_added',
-    'product',
-    product.id,
-     f'Added product: {name}')
+            current_user.id,
+            'product_added',
+            'product',
+            product.id,
+            f'Added product: {name}')
         flash(
-    'Product added successfully! It will appear after admin approval.',
-     'success')
+            'Product added successfully! It will appear after admin approval.',
+            'success')
         return redirect(url_for('seller.products'))
 
     return render_template('seller/add_product.html', categories=categories)
@@ -239,9 +237,9 @@ def wallet():
     withdrawals = Withdrawal.query.filter_by(seller_id=seller.id).order_by(Withdrawal.created_at.desc()).all()
     
     return render_template('seller/wallet.html', 
-                         wallet=seller.wallet, 
-                         transactions=transactions,
-                         withdrawals=withdrawals)
+                           wallet=seller.wallet, 
+                           transactions=transactions,
+                           withdrawals=withdrawals)
 
 @seller_bp.route('/request-withdrawal', methods=['POST'])
 @role_required(role='seller')
