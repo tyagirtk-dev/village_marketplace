@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Order Has Been Shipped!</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #007bff;">Good News! Your Order Has Shipped</h2>
+    <p>Hi,</p>
+    <p>We are excited to let you know that your order <strong>#{{ order.order_number }}</strong> has been shipped and is on its way to you!</p>
+    
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid #007bff;">
+        <h4>Delivery & Tracking Details:</h4>
+        <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+        {% if order.tracking_number %}
+            <p><strong>Tracking Number:</strong> <span style="color: #007bff; font-weight: bold;">{{ order.tracking_number }}</span></p>
+        {% endif %}
+    </div>
+
+    <h4>Items in this shipment:</h4>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ item.product.name }}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ item.quantity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <p>Thank you for shopping with Village Marketplace!</p>
+    <p>Best Regards,<br>Village Marketplace Team</p>
+</body>
+</html>

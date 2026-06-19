@@ -217,8 +217,9 @@ def checkout():
             db.session.add(payment)
 
             # Send notification to seller
+            seller_user_id = items[0].product.seller.user_id if items and items[0].product.seller else seller_id
             create_notification(
-                order.seller.user_id,
+                seller_user_id,
                 'New Order Received',
                 f'You have received a new order #{order.order_number} for ₹{total_amount}',
                 'order',

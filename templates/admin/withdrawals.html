@@ -8,7 +8,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Pending Withdrawals Tab -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white">
         <h6 class="mb-0"><i class="fas fa-clock"></i> Pending Requests</h6>
@@ -29,7 +28,7 @@
                 </thead>
                 <tbody>
                     {% for withdrawal in pending %}
-                    <tr data-withdrawal-id="{{ withdrawal.id }}">
+                    <tr>
                         <td>#{{ withdrawal.id }}</td>
                         <td><strong>{{ withdrawal.seller.store_name }}</strong></td>
                         <td class="text-success fw-bold">₹{{ "{:,.2f}".format(withdrawal.amount) }}</td>
@@ -37,12 +36,17 @@
                         <td><small>{{ withdrawal.account_details[:50] }}</small></td>
                         <td>{{ withdrawal.created_at.strftime('%d/%m/%Y') }}</td>
                         <td>
-                            <button class="btn btn-sm btn-success btn-approve-withdrawal" data-id="{{ withdrawal.id }}" data-amount="{{ withdrawal.amount }}" data-store="{{ withdrawal.seller.store_name }}">
-                                <i class="fas fa-check-circle"></i> Approve
-                            </button>
-                            <button class="btn btn-sm btn-danger btn-reject-withdrawal" data-id="{{ withdrawal.id }}">
-                                <i class="fas fa-times-circle"></i> Reject
-                            </button>
+                            <form action="/admin/withdrawal/{{ withdrawal.id }}/process" method="POST" style="display: inline-block; margin: 0;">
+                                <input type="hidden" name="remarks" value="UPI Paid via Admin Panel">
+                                
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success me-1" onclick="return confirm('Confirm Approve? Kya aapne UPI transfer kar diya hai?')">
+                                    <i class="fas fa-check-circle"></i> Approve
+                                </button>
+                                
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger" onclick="return confirm('Confirm Reject? Kya aap is request ko cancel karna chahte hain?')">
+                                    <i class="fas fa-times-circle"></i> Reject
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% else %}
@@ -54,7 +58,6 @@
     </div>
 </div>
 
-<!-- Processed Withdrawals -->
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white">
         <h6 class="mb-0"><i class="fas fa-history"></i> Processed Requests</h6>
@@ -94,69 +97,4 @@
         </div>
     </div>
 </div>
-
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject Withdrawal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="rejectForm" method="POST">
-                <div class="modal-body">
-                    <input type="hidden" name="action" value="reject">
-                    <div class="mb-3">
-                        <label class="form-label">Reason for rejection</label>
-                        <textarea name="remarks" class="form-control" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject Withdrawal</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-    let currentWithdrawalId = null;
-    
-    // Approve Withdrawal
-    document.querySelectorAll('.btn-approve-withdrawal').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const withdrawalId = this.getAttribute('data-id');
-            const amount = this.getAttribute('data-amount');
-            const store = this.getAttribute('data-store');
-            
-            if (confirm(`Approve withdrawal of ₹${amount} for ${store}?`)) {
-                // Create a temporary form and submit
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `{{ url_for('admin.process_withdrawal_request', withdrawal_id=0) }}`.replace('/0', `/${withdrawalId}`);
-                
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'action';
-                input.value = 'approve';
-                form.appendChild(input);
-                
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    });
-    
-    // Reject Withdrawal
-    document.querySelectorAll('.btn-reject-withdrawal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentWithdrawalId = this.getAttribute('data-id');
-            const form = document.getElementById('rejectForm');
-            form.action = `{{ url_for('admin.process_withdrawal_request', withdrawal_id=0) }}`.replace('/0', `/${currentWithdrawalId}`);
-            rejectModal.show();
-        });
-    });
-</script>
 {% endblock %}

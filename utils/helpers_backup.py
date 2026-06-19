@@ -76,7 +76,7 @@ def log_info(message):
 def log_error(message):
     current_app.logger.error(message)
 
-def save_uploaded_file(file, folder='products'):
+def save_uploaded_file(file, folder='uploads'):
     if not file or file.filename == '':
         return None
 
@@ -86,21 +86,16 @@ def save_uploaded_file(file, folder='products'):
 
     upload_folder = os.path.join(
         current_app.root_path,
-        'static',
         'uploads',
         folder
     )
 
     os.makedirs(upload_folder, exist_ok=True)
 
-    filepath = os.path.join(
-        upload_folder,
-        filename
-    )
-
+    filepath = os.path.join(upload_folder, filename)
     file.save(filepath)
 
-    return filename
+    return f"{folder}/{filename}"
 
 
 def setup_logging():

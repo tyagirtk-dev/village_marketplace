@@ -24,7 +24,7 @@ class Config:
     SITE_URL = os.environ.get('SITE_URL', 'http://localhost:5000')
     COMMISSION_RATE = float(os.environ.get('COMMISSION_RATE', 10.0))
 
-    UPLOAD_FOLDER = 'uploads/products'
+    UPLOAD_FOLDER = 'static/uploads/products'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
