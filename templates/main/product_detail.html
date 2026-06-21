@@ -1,7 +1,18 @@
-{% extends "base.html" %}                 
+{% extends "base.html" %}
 {% block title %}{{ product.name }} | {{ config.SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+    .nav-pills .nav-link.active {
+        background-color: #198754 !important;
+        color: #fff !important;
+    }
+    .nav-pills .nav-link {
+        color: #4a5568;
+        background-color: #f8f9fa;
+    }
+</style>
+
 <div class="container my-5">
     <div class="row g-4 lg-g-5">
         <div class="col-md-6">
@@ -13,7 +24,7 @@
                 {% if images|length > 1 %}
                 <div class="thumbnail-list d-flex gap-2 pb-2 overflow-x-auto" style="scrollbar-width: thin;">
                     {% for img in images %}
-                    <img src="{{ url_for('static', filename='uploads/products/' + img) }}" class="thumbnail-img img-thumbnail border-2 transition-all" width="75" height="75" style="object-fit:cover; cursor:pointer; border-radius:10px;" onclick="document.getElementById('mainProductImage').src=this.src; document.querySelectorAll('.thumbnail-img').forEach(el => el.classList.remove('border-primary')); this.classList.add('border-primary');">
+                    <img src="{{ url_for('static', filename='uploads/products/' + img) }}" class="thumbnail-img img-thumbnail border-2 transition-all" width="75" height="75" style="object-fit:cover; cursor:pointer; border-radius:10px;" onclick="document.getElementById('mainProductImage').src=this.src; document.querySelectorAll('.thumbnail-img').forEach(el => el.classList.remove('border-success')); this.classList.add('border-success');">
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -24,13 +35,14 @@
             <div class="product-info-ps ps-md-3">
                 <nav aria-label="breadcrumb" class="mb-2">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-success">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}" class="text-decoration-none text-success">Shop</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ product.name[:30] }}...</li>
                     </ol>
                 </nav>
-                
+
                 <h1 class="fw-bold text-dark mb-2" style="font-size: 2.2rem;">{{ product.name }}</h1>
-                
+
                 <div class="d-flex align-items-center gap-3 mb-4 bg-light p-2 rounded-3 d-inline-flex border">
                     <div class="rating-stars text-warning fs-5">
                         {% for i in range(1,6) %}
@@ -48,9 +60,9 @@
 
                 <div class="p-4 rounded-4 border bg-white shadow-sm mb-4">
                     <div class="mb-2 text-muted fs-6">
-                        Store: <span class="text-primary fw-bold"><i class="bi bi-shop me-1"></i>{{ product.seller.store_name }}</span>
+                        Store: <span class="text-success fw-bold"><i class="bi bi-shop me-1"></i>{{ product.seller.store_name }}</span>
                     </div>
-                    
+
                     <div class="my-3">
                         <span class="h1 fw-bold text-success">₹{{ "%.2f"|format(product.price) }}</span>
                     </div>
@@ -59,7 +71,7 @@
                         {% if product.stock > 0 %}
                             <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> In Stock</span>
                             {% if product.stock < 10 %}
-                                <span class="badge bg-warning-subtle text-warning-dominant border border-warning px-3 py-2 rounded-pill ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Only {{ product.stock }} left</span>
+                                <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Only {{ product.stock }} left</span>
                             {% endif %}
                         {% else %}
                             <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> Out of Stock</span>
@@ -67,24 +79,35 @@
                     </div>
 
                     {% if product.stock > 0 %}
-                    <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}" method="POST" class="row g-3 align-items-center">
-                        <div class="col-auto">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-sm-auto">
                             <label class="form-label fw-semibold text-secondary small mb-1">Quantity</label>
-                            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control form-control-lg border-2 text-center" style="width:90px; border-radius: 10px;">
+                            <input type="number" id="desktopQty" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control form-control-lg border-2 text-center" style="width:100%; min-width:90px; border-radius: 10px;" onchange="document.getElementById('buyNowQty').value = this.value; document.getElementById('cartQty').value = this.value;">
                         </div>
-                        <div class="col">
-                            <label class="form-label d-block mb-1 opacity-0">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; height: 48px;">
-                                <i class="bi bi-cart-plus fs-5"></i> Add to Cart
-                            </button>
+
+                        <div class="col-12 col-sm">
+                            <label class="form-label d-block mb-1 d-none d-sm-block opacity-0">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}" method="POST" class="flex-grow-1">
+                                    <input type="hidden" name="quantity" id="cartQty" value="1">
+                                    <button type="submit" class="btn btn-outline-success btn-lg w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; height: 48px; font-size: 1rem;">
+                                        <i class="bi bi-cart-plus fs-5"></i> Add to Cart
+                                    </button>
+                                </form>
+
+                                <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}?redirect=checkout" method="POST" class="flex-grow-1">
+                                    <input type="hidden" name="quantity" id="buyNowQty" value="1">
+                                    <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; height: 48px; font-size: 1rem;">
+                                        <i class="bi bi-lightning-fill"></i> Buy Now
+                                    </button>
+                                </form>
+
+                                <a href="{{ url_for('customer.add_to_wishlist', product_id=product.id) }}" class="btn btn-outline-danger btn-lg d-flex align-items-center justify-content-center" style="border-radius: 12px; width: 48px; height: 48px;" title="Add to Wishlist">
+                                    <i class="bi bi-heart fs-5"></i>
+                                </a>
+                            </div>
                         </div>
-                        <div class="col-auto">
-                            <label class="form-label d-block mb-1 opacity-0">&nbsp;</label>
-                            <a href="{{ url_for('customer.add_to_wishlist', product_id=product.id) }}" class="btn btn-outline-danger btn-lg d-flex align-items-center justify-content-center" style="border-radius: 12px; width: 48px; height: 48px;" title="Add to Wishlist">
-                                <i class="bi bi-heart fs-5"></i>
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                     {% else %}
                     <button class="btn btn-secondary btn-lg w-100 fw-bold rounded-3" style="height: 48px;" disabled>Out of Stock</button>
                     {% endif %}
@@ -103,7 +126,7 @@
                     <button class="nav-link px-4 py-2 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#reviews">Reviews ({{ product.total_reviews }})</button>
                 </li>
             </ul>
-            
+
             <div class="tab-content p-4 border rounded-4 bg-white shadow-sm">
                 <div class="tab-pane fade show active" id="description" style="line-height: 1.7; color: #4a5568;">
                     {{ product.description }}
@@ -114,7 +137,7 @@
                         <div class="pb-3 mb-3 {% if not loop.last %}border-bottom{% endif %}">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold text-uppercase" style="width: 35px; height: 35px; font-size: 0.9rem;">
+                                    <div class="avatar bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center fw-bold text-uppercase" style="width: 35px; height: 35px; font-size: 0.9rem;">
                                         {{ review.customer.user.name[0] }}
                                     </div>
                                     <strong class="text-dark">{{ review.customer.user.name }}</strong>
@@ -143,7 +166,7 @@
     {% if related_products %}
     <div class="row mt-5 pt-2">
         <div class="col-12">
-            <h4 class="fw-bold text-dark mb-4"><i class="bi bi-bag-heart me-2 text-danger"></i>You may also like</h4>
+            <h4 class="fw-bold text-dark mb-4"><i class="bi bi-bag-heart me-2 text-success"></i>You may also like</h4>
             <div class="row g-4">
                 {% for rp in related_products[:4] %}
                 <div class="col-6 col-md-3">
@@ -159,15 +182,15 @@
 </div>
 
 {% if product.stock > 0 %}
-<div class="mobile-sticky-bar d-md-none fixed-bottom border-top" style="z-index: 1030;">
-    <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-lg">
+<div class="mobile-sticky-bar d-md-none fixed-bottom border-top" style="z-index: 1030; background: #fff;">
+    <div class="d-flex justify-content-between align-items-center p-3 shadow-lg">
         <div>
             <span class="fs-5 fw-bold text-success">₹{{ "%.2f"|format(product.price) }}</span><br>
             <small class="text-success fw-semibold"><i class="bi bi-patch-check"></i> In Stock</small>
         </div>
-        <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}" method="POST" class="d-flex gap-2 align-items-center">
-            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="width:65px; height: 38px; border-radius: 8px;" class="form-control text-center border-2 fw-bold">
-            <button type="submit" class="btn btn-primary fw-bold" style="height: 38px; border-radius: 8px; px-4">Buy Now</button>
+        <form action="{{ url_for('customer.add_to_cart', product_id=product.id) }}?redirect=checkout" method="POST" class="d-flex gap-2 align-items-center m-0">
+            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="width:60px; height: 40px; border-radius: 8px;" class="form-control text-center border-2 fw-bold" onchange="document.getElementById('desktopQty').value = this.value; document.getElementById('cartQty').value = this.value; document.getElementById('buyNowQty').value = this.value;">
+            <button type="submit" class="btn btn-success fw-bold" style="height: 40px; border-radius: 8px; padding-left: 20px; padding-right: 20px;">Buy Now</button>
         </form>
     </div>
 </div>

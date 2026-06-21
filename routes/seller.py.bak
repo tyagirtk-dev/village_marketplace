@@ -1,4 +1,4 @@
-from flask import flash, redirect, url_for, Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 import os
@@ -25,7 +25,7 @@ def dashboard():
         flash('Your seller account is pending approval.', 'warning')
         return redirect(url_for('main.index'))
 
-    total_products = Product.query.filter_by(seller_id=seller.id).filter(Product.status != 'deleted').count()
+    total_products = Product.query.filter_by(seller_id=seller.id).count()
     total_orders = Order.query.filter_by(seller_id=seller.id).count()
     pending_orders = Order.query.filter_by(
         seller_id=seller.id, status='pending').count()
@@ -149,8 +149,7 @@ def delete_product(product_id):
     if product.seller_id != current_user.seller_profile.id:
         abort(403)
     
-    # Soft Delete Implementation: Safe from IntegrityError
-    product.status = 'deleted'
+    db.session.delete(product)
     db.session.commit()
     log_audit(current_user.id, 'product_deleted', 'product', product_id, f'Deleted product: {product.name}')
     flash('Product deleted successfully.', 'success')
@@ -183,22 +182,11 @@ def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     if order.seller_id != current_user.seller_profile.id:
         abort(403)
-
+    
+    new_status = request.form.get('status')
+    tracking_number = request.form.get('tracking_number')
+    
     old_status = order.status
-    new_status = request.form.get("status")
-    tracking_number = request.form.get("tracking_number")
-
-    # STRICT LOGICAL SEQUENCE SECURITY CHECK
-    if old_status in ["delivered", "cancelled"]:
-        flash("Order is finalized! State cannot be modified.", "danger")
-        return redirect(url_for("seller.order_detail", order_id=order.id))
-
-    if old_status == "shipped" and new_status in ["processing", "pending"]:
-        flash("Invalid Sequence! Shipped order cannot revert to processing.", "danger")
-        return redirect(url_for("seller.order_detail", order_id=order.id))
-
-    if old_status == new_status and not tracking_number:
-        return redirect(url_for("seller.order_detail", order_id=order.id))
     order.status = new_status
     if tracking_number:
         order.tracking_number = tracking_number

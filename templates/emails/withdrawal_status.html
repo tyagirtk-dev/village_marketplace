@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; line-height: 1.6; color: #333;">
+    <h2 style="color: #6c757d;">Withdrawal Request: {{ status }}</h2>
+    <p>Hello {{ name }},</p>
+    <p>Your withdrawal request of <strong>₹{{ amount }}</strong> has been marked as <strong>{{ status }}</strong>.</p>
+    {% if remarks %}
+    <p><strong>Remarks:</strong> {{ remarks }}</p>
+    {% endif %}
+    <p>If you have any questions, please contact the {{ site_name }} support team.</p>
+    <br>
+    <p>Best Regards,<br>{{ site_name }} Team</p>
+</body>
+</html>

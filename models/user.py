@@ -80,3 +80,20 @@ class Seller(db.Model):
                              uselist=False, cascade='all, delete-orphan')
     withdrawals = db.relationship(
         'Withdrawal', backref='seller', lazy='dynamic')
+
+class DeliveryAgent(db.Model):
+    __tablename__ = 'delivery_agents'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    
+    # Agar Admin banayega toh ye Null rahega, agar Seller banayega toh uski Seller ID save hogi
+    created_by_seller_id = db.Column(db.Integer, db.ForeignKey('sellers.id', ondelete='SET NULL'), nullable=True)
+    
+    vehicle_number = db.Column(db.String(50), nullable=True)
+    is_available = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user_rel = db.relationship('User', backref=db.backref('delivery_profile', uselist=False))
+    seller_rel = db.relationship('Seller', backref=db.backref('my_agents', lazy='dynamic'))

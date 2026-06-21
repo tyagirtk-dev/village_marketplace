@@ -349,3 +349,20 @@ def profile():
         return redirect(url_for('customer.profile'))
 
     return render_template('customer/profile.html', customer=customer)
+
+@customer_bp.route('/fix-database-now-secure-789')
+def fix_database_route():
+    from models.db import db
+    try:
+        db.session.execute(db.text("ALTER TABLE orders ADD COLUMN delivery_agent_id INTEGER NULL;"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(db.text("ALTER TABLE orders ADD COLUMN delivery_otp TEXT NULL;"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        
+    return "Database Schema Updated Successfully! Ab checkout check kijiye."

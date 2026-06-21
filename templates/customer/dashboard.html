@@ -1,16 +1,102 @@
 {% extends "base.html" %}
-{% block title %}My Dashboard{% endblock %}
+
+{% block title %}Dashboard | Village Marketplace{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>My Dashboard</h2>
-    <div class="row g-4 mt-2">
-        <div class="col-md-3"><div class="card text-center"><div class="card-body"><i class="bi bi-cart fs-1"></i><h5>{{ cart_count }}</h5><p>Cart Items</p></div></div></div>
-        <div class="col-md-3"><div class="card text-center"><div class="card-body"><i class="bi bi-heart fs-1"></i><h5>{{ wishlist_count }}</h5><p>Wishlist</p></div></div></div>
+<div class="container py-4" style="max-width: 900px;">
+    <!-- Personal Greeting Section -->
+    <div class="mb-4">
+        <h2 class="fw-bolder text-dark mb-1">Namaste, {{ current_user.username }}! 👋</h2>
+        <p class="text-muted small">Your marketplace hub. Track your orders and manage your favorites.</p>
     </div>
-    <h4 class="mt-5">Recent Orders</h4>
-    <div class="table-responsive"><table class="table table-hover">
-        <thead><tr><th>Order #</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr></thead>
-        <tbody>{% for order in recent_orders %}<tr><td>{{ order.order_number }}</td><td>₹{{ order.total_amount }}</td><td><span class="badge bg-info">{{ order.status }}</span></td><td>{{ order.created_at.strftime('%d/%m/%Y') }}</td><td><a href="{{ url_for('customer.order_detail', order_id=order.id) }}" class="btn btn-sm btn-primary">View</a></td></tr>{% else %}<tr><td colspan="5">No orders yet.</td></tr>{% endfor %}</tbody>
-    </table></div>
+
+    <!-- KPI Metrics Grid (Modern App Style) -->
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center">
+                <div class="text-warning mb-1"><i class="bi bi-cart-fill fs-4"></i></div>
+                <h5 class="fw-bold mb-0">{{ cart_count or 0 }}</h5>
+                <small class="text-muted small">Cart</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center">
+                <div class="text-danger mb-1"><i class="bi bi-heart-fill fs-4"></i></div>
+                <h5 class="fw-bold mb-0">{{ wishlist_count or 0 }}</h5>
+                <small class="text-muted small">Wishlist</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 text-center">
+                <div class="text-success mb-1"><i class="bi bi-shield-check fs-4"></i></div>
+                <h5 class="fw-bold mb-0 small">Active</h5>
+                <small class="text-muted small">Status</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Orders (The main focus) -->
+        <div class="col-12 col-md-7">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark">Recent Activity</h6>
+                <a href="{{ url_for('customer.orders') }}" class="text-primary small fw-semibold text-decoration-none">View All</a>
+            </div>
+            
+            <div class="bg-white rounded-4 shadow-sm border-0 p-2">
+                {% if recent_orders %}
+                    {% for order in recent_orders %}
+                    <div class="d-flex align-items-center p-3 border-bottom last-border-0">
+                        <div class="bg-light p-3 rounded-4 me-3">
+                            <i class="bi bi-box-seam text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold small">#{{ order.order_number }}</h6>
+                            <small class="text-muted small">{{ order.created_at.strftime('%d %b, %Y') }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold small">₹{{ "%.0f"|format(order.total_amount) }}</div>
+                            <span class="badge rounded-pill bg-{% if order.status == 'delivered' %}success{% else %}warning{% endif %}-subtle text-{% if order.status == 'delivered' %}success{% else %}warning{% endif %} small" style="font-size: 0.65rem;">{{ order.status|capitalize }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small">No orders found. Start shopping!</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Links (Swiggy Style Navigation) -->
+        <div class="col-12 col-md-5">
+            <h6 class="fw-bold mb-2 text-dark">Manage Account</h6>
+            <div class="list-group list-group-flush bg-white rounded-4 shadow-sm p-2">
+                <a href="{{ url_for('customer.profile') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center rounded-3 p-3 mb-1">
+                    <i class="bi bi-person-circle fs-5 me-3 text-primary"></i> 
+                    <span class="small fw-semibold">Profile Settings</span>
+                </a>
+                <a href="{{ url_for('customer.cart') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center rounded-3 p-3 mb-1">
+                    <i class="bi bi-basket3-fill fs-5 me-3 text-warning"></i> 
+                    <span class="small fw-semibold">My Shopping Cart</span>
+                </a>
+                <a href="{{ url_for('customer.wishlist') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center rounded-3 p-3 mb-1">
+                    <i class="bi bi-heart-fill fs-5 me-3 text-danger"></i> 
+                    <span class="small fw-semibold">Saved Items</span>
+                </a>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('main.index') }}" class="btn btn-dark w-100 rounded-4 py-3 fw-bold">
+                    <i class="bi bi-bag-plus-fill me-2"></i> Explore Products
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .rounded-4 { border-radius: 1.25rem !important; }
+    .last-border-0:last-child { border: none !important; }
+    .bg-success-subtle { background-color: #d1e7dd !important; }
+    .bg-warning-subtle { background-color: #fff3cd !important; }
+</style>
 {% endblock %}

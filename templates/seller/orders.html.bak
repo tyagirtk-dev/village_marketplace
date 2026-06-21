@@ -1,0 +1,43 @@
+{% extends "seller/base.html" %}
+
+{% block title %}Orders{% endblock %}
+{% block page_title %}Orders Management{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <ul class="nav nav-pills card-header-pills">
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'all' %}active{% endif %}" href="{{ url_for('seller.orders', status='all') }}">All</a></li>
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'pending' %}active{% endif %}" href="{{ url_for('seller.orders', status='pending') }}">Pending</a></li>
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'processing' %}active{% endif %}" href="{{ url_for('seller.orders', status='processing') }}">Processing</a></li>
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'shipped' %}active{% endif %}" href="{{ url_for('seller.orders', status='shipped') }}">Shipped</a></li>
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'delivered' %}active{% endif %}" href="{{ url_for('seller.orders', status='delivered') }}">Delivered</a></li>
+            <li class="nav-item"><a class="nav-link {% if status_filter == 'cancelled' %}active{% endif %}" href="{{ url_for('seller.orders', status='cancelled') }}">Cancelled</a></li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Order #</th><th>Amount</th><th>Earnings</th><th>Status</th><th>Date</th><th>Tracking</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td class="text-success">₹{{ "%.2f"|format(order.seller_earnings) }}</td>
+                        <td><span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">{{ order.status }}</span></td>
+                        <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ order.tracking_number or '-' }}</td>
+                        <td><a href="{{ url_for('seller.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center py-4">No orders found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

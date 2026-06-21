@@ -1,21 +1,133 @@
 {% extends "base.html" %}
-{% block title %}Cart{% endblock %}
+{% block title %}Shopping Cart | {{ config.SITE_NAME }}{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Shopping Cart</h2>
+<style>
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <i class="bi bi-cart3 text-success fs-3"></i>
+        <h3 class="fw-bold text-dark mb-0">Shopping Cart</h3>
+        {% if cart_items %}
+        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 small fw-medium ms-2">{{ cart_items|length }} Items</span>
+        {% endif %}
+    </div>
+
     {% if cart_items %}
-    <div class="table-responsive"><table class="table table-bordered align-middle">
-        <thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th><th></th></tr></thead>
-        <tbody>{% for item in cart_items %}
-            <tr><td>{{ item.product.name }}</td><td>₹{{ item.product.price }}</td>
-                <td><form action="{{ url_for('customer.update_cart', item_id=item.id) }}" method="POST" class="d-flex gap-2"><input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control w-25"><button type="submit" class="btn btn-sm btn-secondary">Update</button></form></td>
-                <td>₹{{ item.product.price * item.quantity }}</td>
-                <td><a href="{{ url_for('customer.remove_from_cart', item_id=item.id) }}" class="btn btn-sm btn-danger">Remove</a></td>
-            </tr>{% endfor %}
-        </tbody>
-        <tfoot><tr><td colspan="3" class="text-end fw-bold">Total</td><td colspan="2">₹{{ total }}</td></tr></tfoot>
-    </table></div>
-    <div class="text-end"><a href="{{ url_for('customer.checkout') }}" class="btn btn-success btn-lg">Checkout</a></div>
-    {% else %}<div class="alert alert-info">Cart empty.</div>{% endif %}
+    <div class="row g-4">
+        <!-- LEFT COLUMN: CART ITEMS -->
+        <div class="col-lg-8">
+            {% for item in cart_items %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 p-3 bg-white" style="transition: transform 0.2s;">
+                <div class="row g-3 align-items-center">
+                    <!-- Product Thumbnail Image -->
+                    <div class="col-3 col-md-2">
+                        <div class="bg-light rounded-3 overflow-hidden d-flex align-items-center justify-content-center shadow-sm" style="height: 80px; width: 100%;">
+                            <img src="{{ url_for('static', filename='uploads/products/' + (item.product.images.split(',')[0] if item.product.images else 'default.jpg')) }}" 
+                                 class="img-fluid h-100 w-100" 
+                                 style="object-fit: cover;" 
+                                 alt="{{ item.product.name }}"
+                                 onerror="this.src='https://placehold.co/150x150?text=Product'">
+                        </div>
+                    </div>
+                    
+                    <!-- Product Main Info -->
+                    <div class="col-9 col-md-5">
+                        <h6 class="fw-bold text-dark mb-1 text-truncate-2" style="font-size: 0.95rem; line-height: 1.4;">
+                            <a href="{{ url_for('main.product_detail', product_id=item.product.id) }}" class="text-decoration-none text-dark">{{ item.product.name }}</a>
+                        </h6>
+                        <div class="small text-muted mb-2" style="font-size: 0.8rem;">
+                            by <span class="text-success fw-medium">{{ item.product.seller.store_name if item.product.seller else 'Local Artisan' }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold text-success" style="font-size: 1.1rem;">₹{{ item.product.price }}</span>
+                            <span class="text-muted small">each</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Adjust Form Control -->
+                    <div class="col-7 col-md-3">
+                        <form action="{{ url_for('customer.update_cart', item_id=item.id) }}" method="POST" class="d-flex align-items-center gap-1">
+                            <div class="input-group input-group-sm border-2 rounded-3" style="max-width: 140px;">
+                                <span class="input-group-text bg-light text-muted border-end-0 small px-2">Qty</span>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control border-start-0 text-center fw-bold text-dark ps-1" style="font-size: 0.9rem;">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-success rounded-3 px-2 py-1" title="Update Quantity">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Row Item Subtotal & Delete Action -->
+                    <div class="col-5 col-md-2 text-end d-flex flex-row flex-md-column justify-content-between align-items-end h-100">
+                        <div class="d-none d-md-block text-muted small mb-1" style="font-size: 0.75rem;">Subtotal</div>
+                        <span class="fw-bold text-dark d-block mb-md-2" style="font-size: 1.05rem;">₹{{ item.product.price * item.quantity }}</span>
+                        <a href="{{ url_for('customer.remove_from_cart', item_id=item.id) }}" class="btn btn-sm btn-link text-danger text-decoration-none p-0 fw-semibold small" style="font-size: 0.85rem;">
+                            <i class="bi bi-trash3 me-1"></i>Remove
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- RIGHT COLUMN: PRICE DETAILS CARD -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 sticky-top" style="top: 20px; z-index: 5;">
+                <h6 class="fw-bold text-dark text-uppercase tracking-wider small border-bottom pb-2 mb-3">Price Details</h6>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Price ({{ cart_items|length }} Items)</span>
+                    <span class="text-dark fw-medium">₹{{ total }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small">Delivery Charges</span>
+                    <span class="text-success small fw-medium">FREE Delivery</span>
+                </div>
+
+                <hr class="text-muted opacity-25 my-3">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="fw-bold text-dark">Total Amount</span>
+                    <span class="fw-bold text-success fs-4">₹{{ total }}</span>
+                </div>
+
+                <!-- Call to Action Process Checkout -->
+                <div class="d-grid">
+                    <a href="{{ url_for('customer.checkout') }}" class="btn btn-success btn-lg rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 py-3" style="font-size: 1.05rem;">
+                        Proceed to Checkout <i class="bi bi-arrow-right-short fs-5"></i>
+                    </a>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-shield-check text-success me-1"></i> Safe & Secure Payments Only.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Cart Empty State Layout -->
+    <div class="row card border-0 shadow-sm rounded-4 bg-white py-5 text-center px-4 mx-auto my-3" style="max-width: 550px;">
+        <div class="card-body">
+            <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+                <i class="bi bi-cart-x fs-1"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-2">Your cart feels so light!</h5>
+            <p class="text-muted small mb-4 px-md-3">Looks like you hasn't added anything to your cart yet. Explore our genuine rustic village crafts and support small artists.</p>
+            <a href="{{ url_for('main.products') }}" class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-medium">
+                Start Exploring Catalog
+            </a>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

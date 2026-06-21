@@ -23,12 +23,19 @@ class Order(db.Model):
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     delivered_at = db.Column(db.DateTime)
+    
+    # Nayi Fields Jo Humne Add Ki
+    delivery_agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    delivery_otp = db.Column(db.String(10), nullable=True)
 
     # Relationships
     items = db.relationship('OrderItem', backref='order',
                             lazy='dynamic', cascade='all, delete-orphan')
     payment = db.relationship(
         'Payment', backref='order', uselist=False, cascade='all, delete-orphan')
+        
+    # Naya Agent Relationship
+    delivery_agent = db.relationship('User', foreign_keys=[delivery_agent_id], backref=db.backref('agent_orders', lazy='dynamic'))
 
 
 class OrderItem(db.Model):
